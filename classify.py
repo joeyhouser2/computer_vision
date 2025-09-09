@@ -4,15 +4,16 @@ import numpy as np
 import os
 import torch
 import torch.nn as nn
-import torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset
 import sys
 import argparse
+import torch.optim as optim
 import torchvision.transforms as transforms
 from PIL import Image
 
 Model_Directory = 'model'
 Model_path = os.path.join(Model_Directory, 'new_model.pth')
-Cifar_Directory = './cifar'
+Cifar_Directory = './cifar/cifar-10-batches-py'
 class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
                      'dog', 'frog', 'horse', 'ship', 'truck']
 
@@ -32,7 +33,7 @@ def cifar_loader(Cifar_Directory):
         train_data.append(batch_dictionary[b'data'])
         train_labels.extend(batch_dictionary[b'labels'])
     X_train = np.concatenate(train_data)
-    X_train = X_train.reshape((5000,3,32,32)).astype("float32") /255.0
+    X_train = X_train.reshape((50000,3,32,32)).astype("float32") /255.0
     y_train = np.array(train_labels)
     test_path = os.path.join(Cifar_Directory, 'test_batch')
     test_dictionary = unpickle(test_path)
@@ -55,7 +56,7 @@ def cifar_loader(Cifar_Directory):
 
 
 class myneural(nn.Module):
-    def __init__(self, input_size=512, hidden_size=256, num_classes=10):
+    def __init__(self, input_size=3072, hidden_size=256, num_classes=10):
         super(myneural, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size, hidden_size)
@@ -64,11 +65,11 @@ class myneural(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.parameters(), lr=.001)
         
-        def forward(self,x):
-            x = self.relu(self.fc1(x))
-            x = self.relu(self.fc2(x))
-            x = self.fc3(x)
-            return x
+    def forward(self,x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
         
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -95,16 +96,16 @@ def train():
             loss = model.criterion(output,target)
             
             model.optimizer.zero_grad()
-            model.loss.backward()
+            loss.backward()
             model.optimizer.step()
-            running_loss += model.loss.item()
+            running_loss += loss.item()
         model.eval()
         correct = 0
         total = 0
         with torch.no_grad(): # I believe that we don't need to compute gradients in val
             for data, target in test_loader:
-                ouput = model(data)
-                y, predicted = torch.max(ouput.data, 1)
+                output = model(data)
+                y, predicted = torch.max(output.data, 1)
                 total += target.size(0)
                 correct += (predicted == target).sum().item()
         average_loss = running_loss/len(train_loader)
@@ -135,10 +136,9 @@ def test(image_path):
 if __name__ == "__main__":
     args = parse_args()
     if args.command== 'train':
-        #training script
-        pass
+        train()
     elif args.command == "test":
         if not args.image_path:
             print("Missing image Path")
             sys.exit(1)
-        #testing script
+        test(args.image_path)
