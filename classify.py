@@ -54,16 +54,16 @@ def cifar_loader(Cifar_Directory):
     print("loading successful")
     return train_loader, test_loader
 
-
+#defining our neural network class
 class myneural(nn.Module):
-    def __init__(self, input_size=3072, hidden_size=256, num_classes=10):
+    def __init__(self, input_size=3072, hidden_size=256, num_classes=10): #input and hidden layers can change
         super(myneural, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size, hidden_size)
         self.fc3 = nn.Linear(hidden_size, num_classes)
         self.relu = nn.ReLU()
-        self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(self.parameters(), lr=.001)
+        self.criterion = nn.CrossEntropyLoss() #utilizing cross entropy loss
+        self.optimizer = optim.Adam(self.parameters(), lr=.001) #adam optimizer
         
     def forward(self,x):
         x = self.relu(self.fc1(x))
@@ -71,11 +71,13 @@ class myneural(nn.Module):
         x = self.fc3(x)
         return x
         
+#this is to help with command line args
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('command', choices=['train', 'test'])
-    parser.add_argument('image_path', nargs='?', help='Path to test image')
+    parser.add_argument('image_path', nargs='?', help='path to test image')
     return parser.parse_args()
+# we need to preprocess the image when we feed it to the model
 def preprocess(image_path):
     transform = transforms.Compose([transforms.Resize((32,32)), transforms.ToTensor(),
                                     transforms.Normalize((.5,.5,.5), (.5,.5,.5))])
@@ -108,15 +110,17 @@ def train():
                 y, predicted = torch.max(output.data, 1)
                 total += target.size(0)
                 correct += (predicted == target).sum().item()
+        # calculating 
         average_loss = running_loss/len(train_loader)
         accuracy = (correct/total) *100
         print(f"Epoch: {epoch}, Loss: {average_loss:.4f}, Accuracy: {accuracy:.2f}")
     print("training complete")
     if not os.path.exists(Model_Directory):
         os.makedirs(Model_Directory)
-    torch.save(model.state_dict(), Model_path)
+    torch.save(model.state_dict(), Model_path) #saving our model
     print(f"Model saved to {Model_path}")
     
+#function to test model on image
 def test(image_path):
     if not os.path.exists(Model_path):
         print("no path found for model")
@@ -133,6 +137,7 @@ def test(image_path):
         
     print(f"prediction for {image_path} is {prediction}")
 
+#main function for running
 if __name__ == "__main__":
     args = parse_args()
     if args.command== 'train':
