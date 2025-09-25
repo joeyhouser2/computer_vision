@@ -39,9 +39,12 @@ def cifar_loader(Cifar_Directory):
     X_test = test_dictionary[b'data'].reshape((10000,3,32,32)).astype("float32") / 255.0
     y_test = np.array(test_dictionary[b'labels'])
     
-    train_image_tensor = torch.tensor(X_train).view(-1,3*32*32)
+    
+    train_image_tensor = torch.tensor(X_train)
+    # train_image_tensor = torch.tensor(X_train).view(-1,3*32*32)
     train_label_tensor = torch.tensor(y_train, dtype=torch.long)
-    test_image_tensor = torch.tensor(X_test).view(-1,3*32*32)
+    test_image_tensor = torch.tensor(X_test)
+    # test_image_tensor = torch.tensor(X_test).view(-1,3*32*32)
     test_label_tensor = torch.tensor(y_test, dtype=torch.long)
     
     train_dataset = TensorDataset(train_image_tensor, train_label_tensor)
@@ -57,11 +60,11 @@ def cifar_loader(Cifar_Directory):
 class myneural(nn.Module):
     def __init__(self, input_size=3072, hidden_size=1024, num_classes=10): #input and hidden layers can change
         super(myneural, self).__init__()
-        self.conv1 = nn.Conv2d(3,32, kernel_size=32, stride=1, padding=2)
+        self.conv1 = nn.Conv2d(3,32, kernel_size=5, stride=1, padding=2)
         self.relu = nn.ReLU()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.conv2 = nn.Conv2d(32,64, kernel_size=5, stride=1, padding=2)
-        self.fc1 = nn.Linear(4096, hidden_size)
+        self.conv2 = nn.Conv2d(32,64, kernel_size=10, stride=4, padding=2)
+        self.fc1 = nn.Linear(64*1*1, hidden_size)
         self.fc2 = nn.Linear(hidden_size,512)
         self.fc3 = nn.Linear(512, num_classes)
         # self.relu = nn.ReLU()
@@ -71,7 +74,7 @@ class myneural(nn.Module):
     def forward(self,x): # need to edit
         x = self.pool(self.relu(self.conv1(x)))
         x = self.pool(self.relu(self.conv2(x)))
-        x = x.view(-1, 4096) # look into this
+        x = x.view(-1, 64*1*1) # look into this
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         x = self.fc3(x)
