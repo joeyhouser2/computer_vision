@@ -92,8 +92,7 @@ def preprocess(image_path):
                                     transforms.Normalize((.5,.5,.5), (.5,.5,.5))])
     image = Image.open(image_path).convert('RGB') #make sure format consistent
     image_tensor = transform(image).unsqueeze(0)
-    flattened = image_tensor.view(1,-1)
-    return flattened
+    return image_tensor
 
 def train():
     train_loader, test_loader = cifar_loader(Cifar_Directory)
